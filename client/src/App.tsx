@@ -1,26 +1,34 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import HomePage from './pages/home';
+import TeamIdPage from './pages/teamIdRetrieval';
+import StatChart from './components/teamchart';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+    const [teamId, setTeamId] = useState('');
+
+    return (
+      <Router>
+        <div className="App">
+          {/* NAV BAR */}
+          <nav>
+            <ul>
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+              <li>
+                <Link to="/team-id">Team ID Retrieval</Link>
+              </li>
+            </ul>
+          </nav>
+          <Routes>
+            {/* Define routes for different pages */}
+            <Route path="/team-id" element={<TeamIdPage />} />
+            <Route path="/" element={<HomePage />} />
+          </Routes>
+        </div>
+      </Router>
+    );
+  }
 
 export default App;
