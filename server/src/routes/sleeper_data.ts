@@ -3,11 +3,26 @@ import fetch from 'node-fetch';
 
 // Minimal shape of Sleeper user response (partial)
 interface SleeperUser {
-    user_id: string;
-    username: string;
-    display_name?: string;
-    avatar?: string | null;
-    // Add more fields as needed
+    'user_id': string;
+    'username': string;
+    'display_name'?: string;
+    'avatar'?: string | null;
+}
+
+interface SleeperLeague {
+    'total_rosters': number;
+    'status': string;
+    'sport': string;
+    'settings': Record<string, any>;
+    'season_type': string;
+    'season': string;
+    'scoring_settings': Record<string, any>;
+    'roster_positions': string[];
+    'previous_league_id'?: string;
+    'name': string;
+    'league_id': string;
+    'draft_id'?: string;
+    'avatar'?: string | null;
 }
 
 // Helper to build Sleeper API base (centralize in case of future versioning)
@@ -53,7 +68,8 @@ export function initSleeperRoutes(app: Express) {
                 return;
             }
 
-            const data = (await response.json()) as SleeperUser | null;
+            const data = await response.json();
+
             if (!data) {
                 res.status(404).json({ error: 'User not found' });
                 return;
@@ -70,6 +86,56 @@ export function initSleeperRoutes(app: Express) {
             const message = err instanceof Error ? err.message : 'Unknown error';
             res.status(500).json({ error: 'Internal server error', message });
             return;
+        }
+    });
+
+    router.get('/sleeper/user/:userId/leagues/:year', async (req, res) => {
+        const userId = req.params.userId;
+        const year = req.params.year;
+
+        if (!userId || !userId.trim()) {
+            res.status(400).json({ error: 'userId parameter is required' });
+            return;
+        }
+
+        try {
+            const url = `${SLEEPER_BASE}/user/${encodeURIComponent(userId)}/leagues/nfl/${encodeURIComponent(year)}`;
+            const response = await fetch(url);
+
+            if (response.status === 404) {
+                res.status(404).json({ error: 'Leagues not found' });
+
+                return;
+            }
+
+            if (!response.ok) {
+                res.status(502).json({
+                    error: 'Upstream Sleeper API error',
+                    status: response.status,
+                    statusText: response.statusText
+                });
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!data) {
+                res.status(404).json({ error: 'User not found' });
+                return;
+            }
+
+            // res.send(data);
+            res.json({
+                user: data
+            });
+            return;
+
+        } catch (err) {
+            // Narrow unknown error
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            res.status(500).json({ error: 'Internal server error', message });
+            return;
+
         }
     });
 
